@@ -1,0 +1,726 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Neural Network Smartphone Activity Detector\n",
+    "\n",
+    "In this activity, you will train a neural network to use smartphone data to predict the activity of the user. \n",
+    "\n",
+    "This dataset has already been separated into input features and target activities. Additional information on the dataset can be found here. \n",
+    "\n",
+    "http://archive.ics.uci.edu/ml/datasets/Smartphone-Based+Recognition+of+Human+Activities+and+Postural+Transitions"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Data Pre-Processing\n",
+    "\n",
+    "Prepare the data for the neural network. This includes splitting the data into a training and testing dataset, Scaling the data, and encoding the categorical target values"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from pathlib import Path\n",
+    "\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.preprocessing import StandardScaler, OneHotEncoder\n",
+    "\n",
+    "import tensorflow as tf\n",
+    "from tensorflow.keras.models import Sequential\n",
+    "from tensorflow.keras.layers import Dense"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(388, 22)"
+      ]
+     },
+     "execution_count": 25,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#reading into compiled csv\n",
+    "data = Path(\"Resources/spotify_main_raw_data.csv\")\n",
+    "df = pd.read_csv(data)\n",
+    "df.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>danceability</th>\n",
+       "      <th>energy</th>\n",
+       "      <th>key</th>\n",
+       "      <th>loudness</th>\n",
+       "      <th>mode</th>\n",
+       "      <th>speechiness</th>\n",
+       "      <th>acousticness</th>\n",
+       "      <th>instrumentalness</th>\n",
+       "      <th>liveness</th>\n",
+       "      <th>valence</th>\n",
+       "      <th>tempo</th>\n",
+       "      <th>duration_ms</th>\n",
+       "      <th>playlist</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0.564</td>\n",
+       "      <td>0.364</td>\n",
+       "      <td>10</td>\n",
+       "      <td>-5.845</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0.0631</td>\n",
+       "      <td>0.75900</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>0.0839</td>\n",
+       "      <td>0.591</td>\n",
+       "      <td>86.538</td>\n",
+       "      <td>192277</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>0.701</td>\n",
+       "      <td>0.519</td>\n",
+       "      <td>1</td>\n",
+       "      <td>-6.382</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.0516</td>\n",
+       "      <td>0.31400</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>0.2070</td>\n",
+       "      <td>0.498</td>\n",
+       "      <td>89.977</td>\n",
+       "      <td>223044</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>0.309</td>\n",
+       "      <td>0.740</td>\n",
+       "      <td>7</td>\n",
+       "      <td>-5.917</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0.0456</td>\n",
+       "      <td>0.00854</td>\n",
+       "      <td>0.025800</td>\n",
+       "      <td>0.1190</td>\n",
+       "      <td>0.166</td>\n",
+       "      <td>144.861</td>\n",
+       "      <td>834720</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>0.552</td>\n",
+       "      <td>0.637</td>\n",
+       "      <td>5</td>\n",
+       "      <td>-6.568</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.0445</td>\n",
+       "      <td>0.46400</td>\n",
+       "      <td>0.000016</td>\n",
+       "      <td>0.1360</td>\n",
+       "      <td>0.333</td>\n",
+       "      <td>97.970</td>\n",
+       "      <td>314280</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>0.655</td>\n",
+       "      <td>0.885</td>\n",
+       "      <td>7</td>\n",
+       "      <td>-4.116</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.0438</td>\n",
+       "      <td>0.00117</td>\n",
+       "      <td>0.000473</td>\n",
+       "      <td>0.0448</td>\n",
+       "      <td>0.938</td>\n",
+       "      <td>100.088</td>\n",
+       "      <td>189293</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>0.564</td>\n",
+       "      <td>0.534</td>\n",
+       "      <td>4</td>\n",
+       "      <td>-6.050</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.0238</td>\n",
+       "      <td>0.28000</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>0.1210</td>\n",
+       "      <td>0.409</td>\n",
+       "      <td>85.964</td>\n",
+       "      <td>206533</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   danceability  energy  key  loudness  mode  speechiness  acousticness  \\\n",
+       "0         0.564   0.364   10    -5.845     0       0.0631       0.75900   \n",
+       "1         0.701   0.519    1    -6.382     1       0.0516       0.31400   \n",
+       "2         0.309   0.740    7    -5.917     0       0.0456       0.00854   \n",
+       "3         0.552   0.637    5    -6.568     1       0.0445       0.46400   \n",
+       "4         0.655   0.885    7    -4.116     1       0.0438       0.00117   \n",
+       "5         0.564   0.534    4    -6.050     1       0.0238       0.28000   \n",
+       "\n",
+       "   instrumentalness  liveness  valence    tempo  duration_ms playlist  \n",
+       "0          0.000000    0.0839    0.591   86.538       192277     ryan  \n",
+       "1          0.000000    0.2070    0.498   89.977       223044     ryan  \n",
+       "2          0.025800    0.1190    0.166  144.861       834720     ryan  \n",
+       "3          0.000016    0.1360    0.333   97.970       314280     ryan  \n",
+       "4          0.000473    0.0448    0.938  100.088       189293     ryan  \n",
+       "5          0.000000    0.1210    0.409   85.964       206533     ryan  "
+      ]
+     },
+     "execution_count": 26,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#dropping irrelevant columns\n",
+    "raw_data = df.drop(['Unnamed: 0',\"artist\",\"track\",\"type\",\"id\",\"uri\",\"track_href\",\"analysis_url\",\"time_signature\"],axis=1)\n",
+    "raw_data.head(6)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Define the features X set and the target y vector\n",
+    "X = raw_data.drop(\"playlist\",axis=1)\n",
+    "y = raw_data.loc[:, [\"playlist\"]]\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "sarah    100\n",
+       "terry     99\n",
+       "ryan      84\n",
+       "alex      55\n",
+       "abdul     50\n",
+       "Name: playlist, dtype: int64"
+      ]
+     },
+     "execution_count": 28,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#multiclass classification\n",
+    "y.playlist.value_counts()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "((291, 12), (97, 12), (291, 1), (97, 1))"
+      ]
+     },
+     "execution_count": 29,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Split the dataset into training and testing data\n",
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1)\n",
+    "\n",
+    "# Acknowledge the dimension of both test and training data\n",
+    "X_train.shape, X_test.shape, y_train.shape, y_test.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Scale the training and testing input features using StandardScaler\n",
+    "X_scaler = StandardScaler()\n",
+    "X_scaler.fit(X_train)\n",
+    "\n",
+    "X_train_scaled = X_scaler.transform(X_train)\n",
+    "X_test_scaled = X_scaler.transform(X_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([1., 0., 0., 0., 0.])"
+      ]
+     },
+     "execution_count": 31,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Apply One-hot encoding to the target labels\n",
+    "enc = OneHotEncoder()\n",
+    "enc.fit(y_train)\n",
+    "\n",
+    "encoded_y_train = enc.transform(y_train).toarray()\n",
+    "encoded_y_test = enc.transform(y_test).toarray()\n",
+    "encoded_y_train[0]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Build a Deep Neural Network"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create a sequential model\n",
+    "model = Sequential()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Add the first layer where the input dimensions are the X.shape[1] = 12 columns of the training data\n",
+    "model.add(Dense(50, activation='relu', input_dim = X.shape[1]))\n",
+    "\n",
+    "# Add the 2nd layer where the input dimensions are the 12 columns of the training data\n",
+    "model.add(Dense(50, activation='relu', input_dim = 50))\n",
+    "\n",
+    "# Add output layer\n",
+    "model.add(Dense(5, activation=\"softmax\", input_dim = 50))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# The output layer has 12 columns that are one-hot encoded\n",
+    "y_train.playlist.value_counts()\n",
+    "\n",
+    "# 5 output since there're 5 playlists\n",
+    "number_outputs = 5"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Compile the model using categorical_crossentropy for the loss function, the adam optimizer,\n",
+    "# and add accuracy to the training metrics\n",
+    "model.compile(optimizer=\"adam\", loss=\"categorical_crossentropy\", metrics=[\"accuracy\"])\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Model: \"sequential_1\"\n",
+      "_________________________________________________________________\n",
+      " Layer (type)                Output Shape              Param #   \n",
+      "=================================================================\n",
+      " dense_3 (Dense)             (None, 50)                650       \n",
+      "                                                                 \n",
+      " dense_4 (Dense)             (None, 50)                2550      \n",
+      "                                                                 \n",
+      " dense_5 (Dense)             (None, 5)                 255       \n",
+      "                                                                 \n",
+      "=================================================================\n",
+      "Total params: 3,455\n",
+      "Trainable params: 3,455\n",
+      "Non-trainable params: 0\n",
+      "_________________________________________________________________\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Print the model summary\n",
+    "model.summary()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/10\n",
+      "10/10 - 0s - loss: 1.6866 - accuracy: 0.1993 - 181ms/epoch - 18ms/step\n",
+      "Epoch 2/10\n",
+      "10/10 - 0s - loss: 1.5442 - accuracy: 0.2577 - 6ms/epoch - 600us/step\n",
+      "Epoch 3/10\n",
+      "10/10 - 0s - loss: 1.4591 - accuracy: 0.3643 - 6ms/epoch - 586us/step\n",
+      "Epoch 4/10\n",
+      "10/10 - 0s - loss: 1.4005 - accuracy: 0.4399 - 6ms/epoch - 600us/step\n",
+      "Epoch 5/10\n",
+      "10/10 - 0s - loss: 1.3596 - accuracy: 0.4639 - 7ms/epoch - 700us/step\n",
+      "Epoch 6/10\n",
+      "10/10 - 0s - loss: 1.3226 - accuracy: 0.4948 - 7ms/epoch - 700us/step\n",
+      "Epoch 7/10\n",
+      "10/10 - 0s - loss: 1.2923 - accuracy: 0.5052 - 6ms/epoch - 600us/step\n",
+      "Epoch 8/10\n",
+      "10/10 - 0s - loss: 1.2645 - accuracy: 0.5120 - 6ms/epoch - 643us/step\n",
+      "Epoch 9/10\n",
+      "10/10 - 0s - loss: 1.2386 - accuracy: 0.5189 - 6ms/epoch - 600us/step\n",
+      "Epoch 10/10\n",
+      "10/10 - 0s - loss: 1.2098 - accuracy: 0.5601 - 7ms/epoch - 700us/step\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<keras.callbacks.History at 0x1aec2047608>"
+      ]
+     },
+     "execution_count": 37,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Use the training data to fit (train) the model\n",
+    "# @NOTE: Experiment with the number of training epochs to find the minimum iterations required to achieve a good accuracy\n",
+    "model.fit(\n",
+    "    X_train_scaled,\n",
+    "    encoded_y_train,\n",
+    "    epochs=10,\n",
+    "    shuffle=True,\n",
+    "    verbose=2\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Evaluate the Model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "4/4 - 0s - loss: 1.4574 - accuracy: 0.3918 - 65ms/epoch - 16ms/step\n",
+      "Normal Neural Network - Loss: 1.4573763608932495, Accuracy: 0.39175257086753845\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Evaluate the model using the testing data\n",
+    "model_loss, model_accuracy = model.evaluate(X_test_scaled, encoded_y_test, verbose=2)\n",
+    "print(f\"Normal Neural Network - Loss: {model_loss}, Accuracy: {model_accuracy}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Actual</th>\n",
+       "      <th>Predicted</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>sarah</td>\n",
+       "      <td>terry</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>sarah</td>\n",
+       "      <td>sarah</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>sarah</td>\n",
+       "      <td>sarah</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>ryan</td>\n",
+       "      <td>sarah</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>terry</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>abdul</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>abdul</td>\n",
+       "      <td>sarah</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>7</th>\n",
+       "      <td>terry</td>\n",
+       "      <td>ryan</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>sarah</td>\n",
+       "      <td>sarah</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9</th>\n",
+       "      <td>sarah</td>\n",
+       "      <td>sarah</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "  Actual Predicted\n",
+       "0  sarah     terry\n",
+       "1  sarah     sarah\n",
+       "2  sarah     sarah\n",
+       "3   ryan     sarah\n",
+       "4  terry      ryan\n",
+       "5  abdul      ryan\n",
+       "6  abdul     sarah\n",
+       "7  terry      ryan\n",
+       "8  sarah     sarah\n",
+       "9  sarah     sarah"
+      ]
+     },
+     "execution_count": 39,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Make predictions\n",
+    "predicted = model.predict(X_test_scaled)\n",
+    "predicted = enc.inverse_transform(predicted).flatten().tolist()\n",
+    "results = pd.DataFrame({\n",
+    "    \"Actual\": y_test.playlist.values,\n",
+    "    \"Predicted\": predicted\n",
+    "})\n",
+    "results.head(10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "              precision    recall  f1-score   support\n",
+      "\n",
+      "       abdul       1.00      0.14      0.25        14\n",
+      "        alex       0.00      0.00      0.00        14\n",
+      "        ryan       0.30      0.33      0.32        18\n",
+      "       sarah       0.34      0.58      0.43        24\n",
+      "       terry       0.50      0.59      0.54        27\n",
+      "\n",
+      "    accuracy                           0.39        97\n",
+      "   macro avg       0.43      0.33      0.31        97\n",
+      "weighted avg       0.42      0.39      0.35        97\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Print the Classification Report\n",
+    "from sklearn.metrics import classification_report\n",
+    "print(classification_report(results.Actual, results.Predicted))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#reduce 12 features to 5 using PCA\n",
+    "\n",
+    "#ADD VALIDATION DATA\n",
+    "\n",
+    "#https://www.tensorflow.org/guide/keras/train_and_evaluate\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "anaconda-cloud": {},
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.11"
+  },
+  "varInspector": {
+   "cols": {
+    "lenName": 16,
+    "lenType": 16,
+    "lenVar": 40
+   },
+   "kernels_config": {
+    "python": {
+     "delete_cmd_postfix": "",
+     "delete_cmd_prefix": "del ",
+     "library": "var_list.py",
+     "varRefreshCmd": "print(var_dic_list())"
+    },
+    "r": {
+     "delete_cmd_postfix": ") ",
+     "delete_cmd_prefix": "rm(",
+     "library": "var_list.r",
+     "varRefreshCmd": "cat(var_dic_list()) "
+    }
+   },
+   "types_to_exclude": [
+    "module",
+    "function",
+    "builtin_function_or_method",
+    "instance",
+    "_Feature"
+   ],
+   "window_display": false
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
