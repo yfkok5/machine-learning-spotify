@@ -17,7 +17,7 @@ We completed a sentiment analysis on 20 of Ryan's favourite songs. The sentiment
 
 The mean sentiment for titles was neutral (89.1%). This was also the case for song lyrics (71.6%).
 
-![Alt_text](/sentiment_table.png)
+![Alt_text](/Images/sentiment_table.png)
 
 ### b. NLP
 
@@ -64,7 +64,7 @@ The top 10 four-word phrases from the lyrics of Ryan's favourite songs were as f
 
 See a Word Cloud based off the lyrics of Ryan's top 20 favourite songs below:
 
-![Alt_text](/ryanlyrics_wordcloud.png)
+![Alt_text](/Images/ryanlyrics_wordcloud.png)
 
 ## 3. Machine Learning
 
@@ -78,9 +78,9 @@ This is a demonstration of how we utilise Neural Network in Machine learning to 
 ### b. Data Analytics
 We ran a feature importance analysis and figured that these 3 audio features played a big role in our machine learning model predictions.
 
-![feature_impt](Images\feature_importance.png)
+![feature_impt](/Images/feature_importance.PNG)
 
-![top3features](Images\top3_features.png)
+![top3features](/Images/top3_features.PNG)
 
 * Instrumentalness - This value represents the amount of vocals in the song. The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. 
 * Tempo - Tempo is the speed or pace of a given music and derives directly from average beat duration. 
@@ -98,7 +98,7 @@ We ran a feature importance analysis and figured that these 3 audio features pla
 
 We further optimised the accuracies the neural model by altering the number of neural layers, no. of epochs.
 
-![validation_accuracy](Images\validation_accuracy_loss.png)
+![validation_accuracy](/Images/validation_accuracy_loss.PNG)
 
 The model came to a steady state after 60 epochs with the following results:
 
