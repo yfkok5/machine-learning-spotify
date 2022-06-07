@@ -68,13 +68,53 @@ See a Word Cloud based off the lyrics of Ryan's top 20 favourite songs below:
 
 ## 3. Machine Learning
 
-### a. Neural Network
+### a. Neural Network Model
+This is a demonstration of how we utilise Neural Network in Machine learning to make genre predictions for the 1,085 songs that we have on spotify. This playlist only consist of 3 genres (which will serve as our "target"):
 
+1) R&B
+2) Jazz
+3) Rock
 
-### b. Classification
+### b. Data Analytics
+We ran a feature importance analysis and figured that these 3 audio features played a big role in our machine learning model predictions.
 
+![feature_impt](Images\feature_importance.png)
+
+![top3features](Images\top3_features.png)
+
+* Instrumentalness - This value represents the amount of vocals in the song. The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. 
+* Tempo - Tempo is the speed or pace of a given music and derives directly from average beat duration. 
+* Energy - Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy
+
+### c. Process Map
+1) Data was split using train_test_split
+2) Scaled using standard scaler
+3) Utilised OneHotEncoder to fit y_train
+4) Initiated neural network model
+5) Added 2 neural layers
+6) Compiled & fitted
+7) Included 10% of our training data as validation data to obtain x_val & y_val accuracy
+8) Comparing it to our test data accuracy
+
+We further optimised the accuracies the neural model by altering the number of neural layers, no. of epochs.
+
+![validation_accuracy](Images\validation_accuracy_loss.png)
+
+The model came to a steady state after 60 epochs with the following results:
+
+* val_accuracy = 0.9136
+* val_loss = 0.2365
+* test_accuracy = 0.8376
+* test_loss = 0.6086
+
+The fact that val accuracy is higher than test accuracy suggests that the hyperparameters in this model have been specifically tuned for this specific validation dataset. A bigger sample size might be needed to improve this. 
 
 ## 4. How to Use This Repository
+1) Raw data was collated via spotipy package "01 playlist_export_function.ipyb". Simply just input your username & spotify URI and it will churn out that specific playlist together with its audio features.
+
+2) "03 final_neural" is where the neural network model is set up. 
+
+
 
 
 
